@@ -7,7 +7,6 @@
 #define PIN 7
 #define VRX_PIN A1
 #define VRY_PIN A0
-#define STEPS 100
 #define NUMPIXELS 14     // make this higher to slow down
 #define SW 2
 
@@ -21,6 +20,8 @@ int dela = 10;
 
 Max72xxPanel matrix = Max72xxPanel(pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
 
+
+//Led Matrix Mapping
 const unsigned char PROGMEM up[] = {
   B00011000,
   B00100100,
@@ -78,6 +79,7 @@ const unsigned char PROGMEM nothing[] = {
 };
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+//Ezbutton Is for using middle click on joystick
 ezButton button(SW);
 
 
@@ -90,7 +92,6 @@ void setup() {
   pixels.begin();
   Serial.begin(9600);
   matrix.setIntensity(10);
-
 }
  
  
@@ -98,19 +99,17 @@ void loop() {
   button.loop();
   xValue = analogRead(VRX_PIN);
   yValue = analogRead(VRY_PIN);
-  
-bValue = button.getState();
+  bValue = button.getState();
 
   if (button.isPressed()) {
-    Serial.println("The button is pressed");
-     matrix.drawBitmap(0, 0, nothing, 8, 8, LOW);
+    matrix.drawBitmap(0, 0, nothing, 8, 8, LOW);
     matrix.write();
     color[0] = 0;
     color[1] = 0;
     color[2] = 0;
-    // TODO do something here
   }
   
+  //Calls stickman function passing color values into be mutated
   stickman(color[0], color[1], color[2], dela);
   for(int i=0; i<NUMPIXELS; i++){
     pixels.setPixelColor(i, pixels.Color(color[0], color[1], color[2]));
@@ -131,22 +130,20 @@ void stickman(int &red, int &green, int &blue, int &dela) {
     red = 0;
     green = 0;
     blue = 0;
-    Serial.println("test");
     matrix.drawBitmap(0, 0, down, 8, 8, HIGH);
     matrix.write();
 
   }
   else if(xValue > 0 && xValue < 950 && yValue > 0 && yValue < 400){
-    Serial.println("right");
     matrix.drawBitmap(0, 0, right, 8, 8, HIGH);
     matrix.write();
     dela = 100;
   }
   else if(xValue > 0 && xValue < 150 && yValue > 0 && yValue < 1000){
-    Serial.println("up");
     matrix.drawBitmap(0, 0, up, 8, 8, HIGH);
     matrix.write();
     int x = 0;
+    //Turns one led on then turns off and turn the next on
     for(int i=0; i<NUMPIXELS; i++){
       pixels.setPixelColor(i, pixels.Color(color[0], color[1], color[2]));
       delay(100);
@@ -158,6 +155,7 @@ void stickman(int &red, int &green, int &blue, int &dela) {
     }
   }
   else {
+    //Fixes glitch with led matrix displaying leds that are meant to be off
     matrix.drawBitmap(0, 0, left, 8, 8, LOW);    
     matrix.drawBitmap(0, 0, down, 8, 8, LOW);    
     matrix.drawBitmap(0, 0, right, 8, 8, LOW);
